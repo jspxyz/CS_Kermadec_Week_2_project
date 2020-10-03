@@ -80,27 +80,55 @@ create_categories_table()
 # attributes: name, url, parent_id
 # instance method: save_into_db()
 class Category:
-    def __init__(self, name, url, parent_id=None, cat_id=None): 
+    def __init__(self, name, url, parent_id=None, cat_id=None, sub_category_count=0): 
         self.cat_id = cat_id # these are the same categories as in SQL database made above
         self.name = name
         self.url = url
         self.parent_id = parent_id
+        self.sub_category_count = sub_category_count
 
     def __repr__(self):
-        return f"ID: {self.cat_id}, Name: {self.name}, URL: {self.url}, Parent: {self.parent_id}"
+        return f"ID: {self.cat_id}, Name: {self.name}, URL: {self.url}, Parent: {self.parent_id}, Sub_Cat_Count: {self.sub_category_count}"
 
     def save_into_db(self): # saving itself into a table. same as INSERT ROW OF DATA section above
         query = """
-            INSERT INTO categories (name, url, parent_id)
-            VALUES (?, ?, ?);
+            INSERT INTO categories (name, url, parent_id, sub_category_count)
+            VALUES (?, ?, ?, ?);
         """
-        val = (self.name, self.url, self.parent_id)
+        val = (self.name, self.url, self.parent_id, self.sub_category_count)
         try:
             cur.execute(query, val)
             self.cat_id = cur.lastrowid
             conn.commit()
         except Exception as err:
             print('ERROR BY INSERT:', err)
+
+
+# get_sub_categories() given a parent category
+def get_sub_categories(parent_category, save_db=False):
+    parent_url = parent_category.url
+    result = []
+
+    try:
+        soup = get_url(parent_url)
+        div_containers = soup.find_all('div', {'class':'list-group-item is-child'}) # getting sub categories
+        sub_length = len(div_containers)
+        for div in div_containers:
+            name = div.a.text
+
+            # replace spaces that appear > 2 times with one space
+            # replace new line with space as well
+            name = re.sub('(\s{2,}|\n+)', ' ', name)
+
+            sub_url = TIKI_URL + div.a['href']
+            cat = Category(name=name, url=sub_url, parent_id=parent_category.cat_id, sub_category_count=sub_length) # we now have parent_id, which is cat_id of parent category
+            if save_db:
+                cat.save_into_db()
+            print(sub_length)
+            result.append(cat)
+    except Exception as err:
+        print('ERROR BY GET SUB CATEGORIES:', err)
+    return result
 
 # Function
 # getting main categories function
@@ -111,7 +139,10 @@ def get_main_categories(save_db=False): # default to False because you don't wan
     for a in soup.find_all('a', {'class': 'MenuItem__MenuLink-sc-181aa19-1 fKvTQu'}):
         name = a.find('span', {'class': 'text'}).text
         url = a['href']
+        
         main_cat = Category(name, url) # creating object from class Category
+        sub_cat = get_sub_categories(main_cat)
+        main_cat.sub_category_count = len(sub_cat)
 
         if save_db: # only save to db if save_db is TRUE. defaulted to FALSE
             main_cat.save_into_db()
@@ -123,29 +154,7 @@ def get_main_categories(save_db=False): # default to False because you don't wan
 # assigning as main_categories
 main_categories = get_main_categories(save_db = True)
 
-# get_sub_categories() given a parent category
-def get_sub_categories(parent_category, save_db=False):
-    parent_url = parent_category.url
-    result = []
 
-    try:
-        soup = get_url(parent_url)
-        div_containers = soup.find_all('div', {'class':'list-group-item is-child'}) # getting sub categories
-        for div in div_containers:
-            name = div.a.text
-
-            # replace spaces that appear > 2 times with one space
-            # replace new line with space as well
-            name = re.sub('(\s{2,}|\n+)', ' ', name)
-
-            sub_url = TIKI_URL + div.a['href']
-            cat = Category(name, sub_url, parent_category.cat_id) # we now have parent_id, which is cat_id of parent category
-            if save_db:
-                cat.save_into_db()
-            result.append(cat)
-    except Exception as err:
-        print('ERROR BY GET SUB CATEGORIES:', err)
-    return result
 
 # get_all_categories() given a list of main categories (This is a recursion function)
 def get_all_categories(categories,save_db=False):
@@ -159,12 +168,13 @@ def get_all_categories(categories,save_db=False):
         get_all_categories(sub_categories)
 
 # code to run and collect all categories
-get_all_categories(main_categories,save_db=True)
+get_all_categories(main_categories[:2],save_db=True)
 
 # drop the whole table to clean things up
 # this actually drops all data from database to start over
 # this helps for testing
-''' commented out entire section
+# commented out entire section
+'''
 cur.execute('DROP TABLE categories;')
 conn.commit()
 
