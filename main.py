@@ -104,3 +104,6 @@ def get_main_categories(save_db=False): # default to False because you don't wan
             main_cat.save_into_db()
         result.append(main_cat)
     return result
+
+# running get_main_categories and saving to database
+get_main_categories(save_db = True)
