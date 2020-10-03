@@ -61,3 +61,30 @@ def create_categories_table():
         print('ERROR BY CREATE TABLE', err)
         
 create_categories_table()
+
+# Instead of using a function to do CRUD on database,
+# creating a class Category is preferred
+# attributes: name, url, parent_id
+# instance method: save_into_db()
+class Category:
+    def __init__(self, name, url, parent_id=None, cat_id=None): 
+        self.cat_id = cat_id # these are the same categories as in SQL database made above
+        self.name = name
+        self.url = url
+        self.parent_id = parent_id
+
+    def __repr__(self):
+        return f"ID: {self.cat_id}, Name: {self.name}, URL: {self.url}, Parent: {self.parent_id}"
+
+    def save_into_db(self): # saving itself into a table. same as INSERT ROW OF DATA section above
+        query = """
+            INSERT INTO categories (name, url, parent_id)
+            VALUES (?, ?, ?);
+        """
+        val = (self.name, self.url, self.parent_id)
+        try:
+            cur.execute(query, val)
+            self.cat_id = cur.lastrowid
+            conn.commit()
+        except Exception as err:
+            print('ERROR BY INSERT:', err)
