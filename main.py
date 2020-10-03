@@ -49,7 +49,7 @@ def get_url(url):
 
 # Function
 # Create table categories in the database using a function
-# id = primary key id
+# cat_id = primary key id
 # name = category title
 # url = category page
 # parent_id = parent id number
@@ -159,7 +159,7 @@ def get_all_categories(categories,save_db=False):
         get_all_categories(sub_categories, save_db=True)
 
 # code to run and collect all categories
-# get_all_categories(main_categories,save_db=True)
+get_all_categories(main_categories,save_db=True)
 
 # create table of lowest level categories
 sub_cat_crawl_db = pd.read_sql_query(
@@ -174,11 +174,11 @@ print(sub_cat_crawl_db)
 # this actually drops all data from database to start over
 # this helps for testing
 # commented out entire section
-
+'''
 cur.execute('DROP TABLE categories;')
 conn.commit()
 
 # re-create our category table again
 create_categories_table()
-
+'''
 
