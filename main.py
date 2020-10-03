@@ -71,15 +71,47 @@ def create_categories_table():
         conn.commit()
     except Exception as err:
         print('ERROR BY CREATE TABLE', err)
+
+# Function
+# Create productd table in the database using a function
+def create_product_table():
+    query = """
+        CREATE TABLE IF NOT EXISTS product_table (
+            p_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            p_title VARCHAR(255),
+            cat_id INTEGER,
+            seller_product_id INTEGER,
+            sku INTEGER,
+            price INTEGER,
+            p_product_id INTEGER,
+            brand TEXT,
+            category TEXT, 
+            p_url TEXT,
+            img_url TEXT,
+            p_original_price INTEGER,
+            discount VARCHAR(255),
+            refund VARCHAR(255),
+            TIKI_now VARCHAR(255),
+            create_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """
+    try:
+        cur.execute(query)
+        conn.commit()
+    except Exception as err:
+        print('ERROR BY CREATE TABLE', err)
         
+
+# run table creation functions
 create_categories_table()
+create_product_table()
 
 # Instead of using a function to do CRUD on database,
 # creating a class Category is preferred
 # attributes: name, url, parent_id
 # instance method: save_into_db()
 class Category:
-    def __init__(self, name, url, parent_id=None, cat_id=None): 
+    def __init__(self, name, url, parent_id=0, cat_id=None): 
         self.cat_id = cat_id # these are the same categories as in SQL database made above
         self.name = name
         self.url = url
