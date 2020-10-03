@@ -280,7 +280,6 @@ def get_products_one_page(url, cat_id, save_db=False):
                 TIKI_now = 'Yes'
             except:
               TIKI_now = 'No'
-            print(p_original_price)
             prod = Product(
                 p_title=p_title,
                 cat_id=cat_id,
@@ -346,7 +345,7 @@ create_product_table()
 main_categories = get_main_categories(save_db = True)
 
 # code to run and collect all categories
-get_all_categories(main_categories[:1],save_db=True)
+get_all_categories(main_categories,save_db=True)
 
 # create table of lowest level categories
 sub_cat_crawl_db = pd.read_sql_query(
