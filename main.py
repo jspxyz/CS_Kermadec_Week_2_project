@@ -59,7 +59,7 @@ def get_url(url):
 def create_categories_table():
     query = """
         CREATE TABLE IF NOT EXISTS categories (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            cat_id INTEGER PRIMARY KEY AUTOINCREMENT,
             name VARCHAR(255),
             url TEXT, 
             parent_id INTEGER, 
@@ -159,14 +159,14 @@ def get_all_categories(categories,save_db=False):
         get_all_categories(sub_categories, save_db=True)
 
 # code to run and collect all categories
-get_all_categories(main_categories,save_db=True)
+# get_all_categories(main_categories,save_db=True)
 
 # create table of lowest level categories
 sub_cat_crawl_db = pd.read_sql_query(
     '''SELECT *
     FROM categories
-    WHERE id NOT IN (SELECT parent_id FROM categories)
-    ORDER BY id''', conn)
+    WHERE cat_id NOT IN (SELECT parent_id FROM categories)
+    ORDER BY cat_id''', conn)
 
 print(sub_cat_crawl_db)
 
@@ -174,11 +174,11 @@ print(sub_cat_crawl_db)
 # this actually drops all data from database to start over
 # this helps for testing
 # commented out entire section
-'''
+
 cur.execute('DROP TABLE categories;')
 conn.commit()
 
 # re-create our category table again
 create_categories_table()
-'''
+
 
