@@ -1,5 +1,25 @@
 # Kermadec Week 2 project crawl Tiki categories & products
 
+''' Steps to crawl products
+Step 1 - create table with all possible categories in TIKI. Use create_categories_table
+Step 2 - create product table . use create_categories_table template and replace the variables
+  - include the category ID
+  - must match IDs to be able to join (using primary key)
+Step 3 - for each cateogry in this table, pull the URL, and repeat the steps from Week 1
+ - can replace the URL from Week 1 project from the URL from the table
+ - use a for loop to repeat process
+ - get to the last category layer first to scrap, to avoid repeating products
+ - lowest level cat doesn't have a sub category. use to check.
+    - either create a child ID OR
+    - use LEFT JOIN to get all sub category
+        - if sub category is equal to NULL, then this is the website to crawl
+Step 4 - get_all_categories(main_categories,save_db = TRUE) is the final step to save
+'''
+
+# functions to run entire program
+# get_url(TIKI_URL)               # function to get Tiki url
+# create_categories_table()       # creating category table
+
 from bs4 import BeautifulSoup
 import requests
 import sqlite3
