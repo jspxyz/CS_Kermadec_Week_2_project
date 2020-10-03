@@ -157,9 +157,24 @@ class Product:
         return f"P_ID: {self.p_id}, Title: {self.p_title}, Cat_ID: {self.cat_id}, Seller_Product_ID: {self.seller_product_id}, SKU: {self.sku}, Price: {self.price}, P_Product_ID: {self.p_product_id}, Brand: {self.brand}, Category: {self.category}, P_URL: {self.p_url}, IMG_URL: {self.img_url}, P_Original_Price: {self.p_original_price}, Discount: {self.discount}, Refund: {self.refund}, TIKI_now: {self.TIKI_now}"
 
     def save_into_db(self): # saving itself into a table. same as INSERT ROW OF DATA section above
-        query = """
-            INSERT INTO product_table (p_id, p_title, cat_id, seller_product_id, sku, price, p_product_id, brand, category, p_url, img_url, p_original_price, discount, refund, TIKI_now)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        column_list = ['p_id',
+                       'p_title', 
+                       'cat_id', 
+                       'seller_product_id', 
+                       'sku', 
+                       'price', 
+                       'p_product_id', 
+                       'brand', 
+                       'category',
+                       'p_url', 
+                       'img_url', 
+                       'p_original_price',
+                       'discount',
+                       'refund',
+                       'TIKI_now']
+        query = f"""
+            INSERT INTO product_table ({', '.join(column_list)})
+            VALUES ({', '.join(['?' for _ in range(len(column_list))])});
         """
         val = (self.p_id, self.p_title, self.cat_id, self.seller_product_id, self.sku, self.price, self.p_product_id, self.brand, self.category, self.p_url, self.img_url, self.p_original_price, self.discount, self.refund, self.TIKI_now)
         try:
