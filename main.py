@@ -23,6 +23,7 @@ Step 4 - get_all_categories(main_categories,save_db = TRUE) is the final step to
 # function to get main categories
 # function to get sub categories
 # function to get all categories
+# section to clean tables and start over, if needed
 
 from bs4 import BeautifulSoup
 import requests
@@ -109,8 +110,10 @@ def get_main_categories(save_db=False): # default to False because you don't wan
         result.append(main_cat)
     return result
 
-# running get_main_categories and saving to database
-# get_main_categories(save_db = True)
+# running get_main_categories
+# saving to database
+# assigning as main_categories
+main_categories = get_main_categories(save_db = True)
 
 # get_sub_categories() given a parent category
 def get_sub_categories(parent_category, save_db=False):
@@ -147,11 +150,16 @@ def get_all_categories(categories,save_db=False):
         print(f'{cat.name} has {len(sub_categories)} sub-categories')
         get_all_categories(sub_categories)
 
+# code to run and collect all categories
+get_all_categories(main_categories,save_db=True)
+
 # drop the whole table to clean things up
 # this actually drops all data from database to start over
 # this helps for testing
+''' commented out entire section
 cur.execute('DROP TABLE categories;')
 conn.commit()
 
 # re-create our category table again
 create_categories_table()
+'''
