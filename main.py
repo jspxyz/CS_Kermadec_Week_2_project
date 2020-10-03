@@ -133,6 +133,42 @@ class Category:
         except Exception as err:
             print('ERROR BY INSERT:', err)
 
+
+# creating a class Product
+class Product:
+    def __init__(self, p_title, cat_id, seller_product_id, sku, price, p_product_id, brand, category, p_url, img_url, p_original_price, discount, refund, TIKI_now, p_id=None,): 
+        self.p_id = p_id # these are the same categories as in SQL database made above
+        self.p_title = p_title
+        self.cat_id = cat_id
+        self.seller_product_id = seller_product_id
+        self.sku = sku
+        self.price = price
+        self.p_product_id = p_product_id
+        self.brand = brand
+        self.category = category
+        self.p_url = p_url
+        self.img_url = img_url
+        self.p_original_price = p_original_price
+        self.discount = discount
+        self.refund = refund
+        self.TIKI_now = TIKI_now
+
+    def __repr__(self):
+        return f"P_ID: {self.p_id}, Title: {self.p_title}, Cat_ID: {self.cat_id}, Seller_Product_ID: {self.seller_product_id}, SKU: {self.sku}, Price: {self.price}, P_Product_ID: {self.p_product_id}, Brand: {self.brand}, Category: {self.category}, P_URL: {self.p_url}, IMG_URL: {self.img_url}, P_Original_Price: {self.p_original_price}, Discount: {self.discount}, Refund: {self.refund}, TIKI_now: {self.TIKI_now}"
+
+    def save_into_db(self): # saving itself into a table. same as INSERT ROW OF DATA section above
+        query = """
+            INSERT INTO product_table (p_id, p_title, cat_id, seller_product_id, sku, price, p_product_id, brand, category, p_url, img_url, p_original_price, discount, refund, TIKI_now)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        """
+        val = (self.p_id, self.p_title, self.cat_id, self.seller_product_id, self.sku, self.price, self.p_product_id, self.brand, self.category, self.p_url, self.img_url, self.p_original_price, self.discount, self.refund, self.TIKI_now)
+        try:
+            cur.execute(query, val)
+            self.p_id = cur.lastrowid
+            conn.commit()
+        except Exception as err:
+            print('ERROR BY INSERT:', err)
+
 # Function
 # getting main categories function
 def get_main_categories(save_db=False): # default to False because you don't want to store faulty data
@@ -191,13 +227,13 @@ def get_all_categories(categories,save_db=False):
         get_all_categories(sub_categories, save_db=True)
 
 # code to run and collect all categories
-get_all_categories(main_categories,save_db=True)
+# get_all_categories(main_categories[:3],save_db=True)
 
 # create table of lowest level categories
 sub_cat_crawl_db = pd.read_sql_query(
     '''SELECT *
     FROM categories
-    WHERE cat_id NOT IN (SELECT parent_id FROM categories)
+    WHERE cat_id NOT IN (SELECT parent_id FROM categories) AND parent_id != 0
     ORDER BY cat_id''', conn)
 
 print(sub_cat_crawl_db)
