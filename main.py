@@ -16,9 +16,11 @@ Step 3 - for each cateogry in this table, pull the URL, and repeat the steps fro
 Step 4 - get_all_categories(main_categories,save_db = TRUE) is the final step to save
 '''
 
-# functions to run entire program
+# Functions to run entire program
 # get_url(TIKI_URL)               # function to get Tiki url
 # create_categories_table()       # creating category table
+    # commented out here but left a command line to run function
+    # underneath the function code
 
 from bs4 import BeautifulSoup
 import requests
@@ -39,3 +41,23 @@ def get_url(url):
         return soup
     except Exception as err:
         print('ERROR BY REQUEST:', err)
+
+# Function
+# Create table categories in the database using a function
+def create_categories_table():
+    query = """
+        CREATE TABLE IF NOT EXISTS categories (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name VARCHAR(255),
+            url TEXT, 
+            parent_id INTEGER, 
+            create_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """
+    try:
+        cur.execute(query)
+        conn.commit()
+    except Exception as err:
+        print('ERROR BY CREATE TABLE', err)
+        
+create_categories_table()
