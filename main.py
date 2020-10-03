@@ -21,10 +21,13 @@ Step 4 - get_all_categories(main_categories,save_db = TRUE) is the final step to
 # function to create category table 
 # creating class Category
 # function to get main categories
+# function to get sub categories
 
 from bs4 import BeautifulSoup
 import requests
 import sqlite3
+import re
+import pandas as pd
 
 TIKI_URL = 'https://tiki.vn'
 
@@ -106,4 +109,40 @@ def get_main_categories(save_db=False): # default to False because you don't wan
     return result
 
 # running get_main_categories and saving to database
-get_main_categories(save_db = True)
+# get_main_categories(save_db = True)
+
+# get_sub_categories() given a parent category
+def get_sub_categories(parent_category, save_db=False):
+    parent_url = parent_category.url
+    result = []
+
+    try:
+        soup = get_url(parent_url)
+        div_containers = soup.find_all('div', {'class':'list-group-item is-child'}) # getting sub categories
+        for div in div_containers:
+            name = div.a.text
+
+            # replace spaces that appear > 2 times with one space
+            # replace new line with space as well
+            name = re.sub('(\s{2,}|\n+)', ' ', name)
+
+            sub_url = TIKI_URL + div.a['href']
+            cat = Category(name, sub_url, parent_category.cat_id) # we now have parent_id, which is cat_id of parent category
+            if save_db:
+                cat.save_into_db()
+            result.append(cat)
+    except Exception as err:
+        print('ERROR BY GET SUB CATEGORIES:', err)
+    return result
+
+
+# get_all_categories() given a list of main categories (This is a recursion function)
+def get_all_categories(categories,save_db=False):
+    # if i reach the last possible category, this function will stop because
+    # the length of the last category will be an empty list
+    if len(categories) == 0: # this is the stop condition
+        return
+    for cat in categories:
+        sub_categories = get_sub_categories(cat, save_db=save_db)
+        print(f'{cat.name} has {len(sub_categories)} sub-categories')
+        get_all_categories(sub_categories)
