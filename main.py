@@ -156,7 +156,7 @@ def get_all_categories(categories,save_db=False):
     for cat in categories:
         sub_categories = get_sub_categories(cat, save_db=save_db)
         print(f'{cat.name} has {len(sub_categories)} sub-categories')
-        get_all_categories(sub_categories)
+        get_all_categories(sub_categories, save_db=True)
 
 # code to run and collect all categories
 get_all_categories(main_categories,save_db=True)
@@ -165,7 +165,7 @@ get_all_categories(main_categories,save_db=True)
 sub_cat_crawl_db = pd.read_sql_query(
     '''SELECT *
     FROM categories
-    
+    WHERE id NOT IN (SELECT parent_id FROM categories)
     ORDER BY id''', conn)
 
 print(sub_cat_crawl_db)
@@ -181,3 +181,4 @@ conn.commit()
 # re-create our category table again
 create_categories_table()
 '''
+
