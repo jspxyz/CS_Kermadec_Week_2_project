@@ -49,6 +49,13 @@ def get_url(url):
 
 # Function
 # Create table categories in the database using a function
+# id = primary key id
+# name = category title
+# url = category page
+# parent_id = parent id number
+# sub_category_count = number of sub categories under each category
+    # using this to add a column to know if a category is at the lowest level
+# create_at = timestamp of when this was created
 def create_categories_table():
     query = """
         CREATE TABLE IF NOT EXISTS categories (
@@ -56,6 +63,7 @@ def create_categories_table():
             name VARCHAR(255),
             url TEXT, 
             parent_id INTEGER, 
+            sub_category_count INTEGER,
             create_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """
