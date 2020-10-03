@@ -30,6 +30,8 @@ import requests
 import sqlite3
 import re
 import pandas as pd
+import time
+import random
 
 TIKI_URL = 'https://tiki.vn'
 
@@ -70,7 +72,7 @@ def create_categories_table():
         cur.execute(query)
         conn.commit()
     except Exception as err:
-        print('ERROR BY CREATE TABLE', err)
+        print('ERROR BY CREATE CATEGORIES TABLE', err)
 
 # Function
 # Create productd table in the database using a function
@@ -99,12 +101,8 @@ def create_product_table():
         cur.execute(query)
         conn.commit()
     except Exception as err:
-        print('ERROR BY CREATE TABLE', err)
+        print('ERROR BY CREATE PRODUCT TABLE', err)
         
-
-# run table creation functions
-create_categories_table()
-create_product_table()
 
 # Instead of using a function to do CRUD on database,
 # creating a class Category is preferred
@@ -131,7 +129,7 @@ class Category:
             self.cat_id = cur.lastrowid
             conn.commit()
         except Exception as err:
-            print('ERROR BY INSERT:', err)
+            print('ERROR BY CATEGORY TABLE INSERT:', err)
 
 
 # creating a class Product
@@ -157,8 +155,7 @@ class Product:
         return f"P_ID: {self.p_id}, Title: {self.p_title}, Cat_ID: {self.cat_id}, Seller_Product_ID: {self.seller_product_id}, SKU: {self.sku}, Price: {self.price}, P_Product_ID: {self.p_product_id}, Brand: {self.brand}, Category: {self.category}, P_URL: {self.p_url}, IMG_URL: {self.img_url}, P_Original_Price: {self.p_original_price}, Discount: {self.discount}, Refund: {self.refund}, TIKI_now: {self.TIKI_now}"
 
     def save_into_db(self): # saving itself into a table. same as INSERT ROW OF DATA section above
-        column_list = ['p_id',
-                       'p_title', 
+        column_list = ['p_title', 
                        'cat_id', 
                        'seller_product_id', 
                        'sku', 
@@ -176,13 +173,13 @@ class Product:
             INSERT INTO product_table ({', '.join(column_list)})
             VALUES ({', '.join(['?' for _ in range(len(column_list))])});
         """
-        val = (self.p_id, self.p_title, self.cat_id, self.seller_product_id, self.sku, self.price, self.p_product_id, self.brand, self.category, self.p_url, self.img_url, self.p_original_price, self.discount, self.refund, self.TIKI_now)
+        val = (self.p_title, self.cat_id, self.seller_product_id, self.sku, self.price, self.p_product_id, self.brand, self.category, self.p_url, self.img_url, self.p_original_price, self.discount, self.refund, self.TIKI_now)
         try:
             cur.execute(query, val)
             self.p_id = cur.lastrowid
             conn.commit()
         except Exception as err:
-            print('ERROR BY INSERT:', err)
+            print('ERROR BY PRODUCT TABLE INSERT:', err)
 
 # Function
 # getting main categories function
@@ -200,10 +197,6 @@ def get_main_categories(save_db=False): # default to False because you don't wan
         result.append(main_cat)
     return result
 
-# running get_main_categories
-# saving to database
-# assigning as main_categories
-main_categories = get_main_categories(save_db = True)
 
 # get_sub_categories() given a parent category
 def get_sub_categories(parent_category, save_db=False):
@@ -241,8 +234,119 @@ def get_all_categories(categories,save_db=False):
         print(f'{cat.name} has {len(sub_categories)} sub-categories')
         get_all_categories(sub_categories, save_db=True)
 
+
+# creating function to scrape products
+def get_products_one_page(url, cat_id, save_db=False):
+    prod_result = []
+  
+    try:
+        soup = get_url(url)
+
+        product_list = soup.find('div',{'class':'product-box-list'})
+
+        # get list of all div class 'product-item'
+        product_items_div = product_list.find_all('div',{'class':'product-item'})
+        
+        # remove div_containers = soup.find_all('div', {'class':'list-group-item is-child'}) # getting sub categories
+        for i in range(len(product_items_div)):
+            # p_id leaving out since this is the pirmary key
+            p_title = product_items_div[i]['data-title']
+            seller_product_id = product_items_div[i]['data-seller-product-id'] 
+            sku = product_items_div[i]['product-sku']
+            price = product_items_div[i]['data-price']
+            p_product_id = product_items_div[i]['data-id']
+            brand = product_items_div[i]['data-brand'] 
+            category = product_items_div[i]['data-category']
+            # pulling information from level below div with different tags
+            p_url = product_items_div[i].a['href']
+            img_url = product_items_div[i].img['src']
+            try:
+              p_original_price = product_items_div[i].find('span',{'class':'price-regular'}).text
+              p_original_price = ''.join(p_original_price.split('.')).strip('đ')
+              discount = product_items_div[i].find('span',{'class':'sale-tag sale-tag-square'}).text
+            except:
+              p_original_price = price
+              discount = '0%'
+            # adding discount if available
+            try:
+              if product_items_div[i].find('div',{'class':'badge-under_price'}).img['src']:
+                refund = 'Yes'
+            except:
+              refund = 'No'
+            
+            # additng Tiki_now if available
+            try:                    
+              if product_items_div[i].find('div',{'class':'item'}).img['src']:
+                TIKI_now = 'Yes'
+            except:
+              TIKI_now = 'No'
+            print(p_original_price)
+            prod = Product(
+                p_title=p_title,
+                cat_id=cat_id,
+                seller_product_id=seller_product_id,
+                sku=sku,
+                price=price,
+                p_product_id=p_product_id,
+                brand=brand,
+                category=category,
+                p_url=p_url,
+                img_url=img_url,
+                p_original_price=p_original_price,
+                discount=discount,
+                refund=refund,
+                TIKI_now=TIKI_now) 
+
+            if save_db:
+                prod.save_into_db()
+            prod_result.append(prod)
+    except Exception as err:
+        print('ERROR BY GET_PRODUCTS_ONE_PAGE:', err)
+    return prod_result
+
+## while function to repeat category scrape
+finalData = []
+def get_one_category_scrape(url, cat_id):
+    product_items_div_length_Loop = 1
+    i = 1
+
+    while product_items_div_length_Loop != 0:
+        path = url + '&page=' + str(i)
+        print(path) # to print path while loop is running to make sure that something is happening
+        result = get_products_one_page(path, cat_id, save_db=True)
+        product_items_div_length_Loop = len(result)
+        print(product_items_div_length_Loop) # another check to see the output of each page
+        finalData.extend(result)
+        i+=1
+        time.sleep(random.randint(2,4))
+    
+    return finalData
+
+
+# drop the whole table to clean things up
+# this actually drops all data from database to start over
+# this helps for testing
+# commented out entire section
+
+# clearing the database
+cur.execute('DROP TABLE categories;')
+cur.execute('DROP TABLE product_table;')
+conn.commit()
+
+# creating tables
+create_categories_table()
+create_product_table()
+
+
+# RUNNING ALL FUNCTIONS
+
+# running get_main_categories
+# saving to database
+# assigning as main_categories
+main_categories = get_main_categories(save_db = True)
+
 # code to run and collect all categories
-# get_all_categories(main_categories[:3],save_db=True)
+get_all_categories(main_categories[:1],save_db=True)
 
 # create table of lowest level categories
 sub_cat_crawl_db = pd.read_sql_query(
@@ -251,17 +355,12 @@ sub_cat_crawl_db = pd.read_sql_query(
     WHERE cat_id NOT IN (SELECT parent_id FROM categories) AND parent_id != 0
     ORDER BY cat_id''', conn)
 
-print(sub_cat_crawl_db)
+# create list of just cat_id and url
+sub_cat_crawl_list = sub_cat_crawl_db[['cat_id','url']]
 
-# drop the whole table to clean things up
-# this actually drops all data from database to start over
-# this helps for testing
-# commented out entire section
-'''
-cur.execute('DROP TABLE categories;')
-conn.commit()
 
-# re-create our category table again
-create_categories_table()
-'''
+# for loop to run scraping functions (one page & categories)
+for cat_id, url in sub_cat_crawl_list.values[:2]:
+  print(url, cat_id)
+  get_one_category_scrape(url, cat_id)
 
