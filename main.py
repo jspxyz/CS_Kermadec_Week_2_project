@@ -22,6 +22,7 @@ Step 4 - get_all_categories(main_categories,save_db = TRUE) is the final step to
 # creating class Category
 # function to get main categories
 # function to get sub categories
+# function to get all categories
 
 from bs4 import BeautifulSoup
 import requests
@@ -135,7 +136,6 @@ def get_sub_categories(parent_category, save_db=False):
         print('ERROR BY GET SUB CATEGORIES:', err)
     return result
 
-
 # get_all_categories() given a list of main categories (This is a recursion function)
 def get_all_categories(categories,save_db=False):
     # if i reach the last possible category, this function will stop because
@@ -146,3 +146,12 @@ def get_all_categories(categories,save_db=False):
         sub_categories = get_sub_categories(cat, save_db=save_db)
         print(f'{cat.name} has {len(sub_categories)} sub-categories')
         get_all_categories(sub_categories)
+
+# drop the whole table to clean things up
+# this actually drops all data from database to start over
+# this helps for testing
+cur.execute('DROP TABLE categories;')
+conn.commit()
+
+# re-create our category table again
+create_categories_table()
