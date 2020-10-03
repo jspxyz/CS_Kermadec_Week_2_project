@@ -10,4 +10,4 @@ db = pd.read_sql_query(
     ORDER BY id;
     ''', conn)
 
-db.to_excel('tiki_db.xlsx', index = False) # index to false, because we already have an ID
+db.to_csv('tiki_db.csv', index = False) # index to false, because we already have an ID
