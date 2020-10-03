@@ -16,11 +16,11 @@ Step 3 - for each cateogry in this table, pull the URL, and repeat the steps fro
 Step 4 - get_all_categories(main_categories,save_db = TRUE) is the final step to save
 '''
 
-# Functions to run entire program
-# get_url(TIKI_URL)               # function to get Tiki url
-# create_categories_table()       # creating category table
-    # commented out here but left a command line to run function
-    # underneath the function code
+# Functions and classes for entire program
+# function to get_url(url)
+# function to create category table 
+# creating class Category
+# function to get main categories
 
 from bs4 import BeautifulSoup
 import requests
@@ -88,3 +88,19 @@ class Category:
             conn.commit()
         except Exception as err:
             print('ERROR BY INSERT:', err)
+
+# Function
+# getting main categories function
+def get_main_categories(save_db=False): # default to False because you don't want to store faulty data
+    soup = get_url(TIKI_URL)
+
+    result = []
+    for a in soup.find_all('a', {'class': 'MenuItem__MenuLink-sc-181aa19-1 fKvTQu'}):
+        name = a.find('span', {'class': 'text'}).text
+        url = a['href']
+        main_cat = Category(name, url) # creating object from class Category
+
+        if save_db: # only save to db if save_db is TRUE. defaulted to FALSE
+            main_cat.save_into_db()
+        result.append(main_cat)
+    return result
