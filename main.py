@@ -328,12 +328,12 @@ def get_one_category_scrape(url, cat_id):
 # commented out entire section
 
 # clearing the database
-cur.execute('DROP TABLE categories;')
+# cur.execute('DROP TABLE categories;')
 cur.execute('DROP TABLE product_table;')
 conn.commit()
 
 # creating tables
-create_categories_table()
+# create_categories_table()
 create_product_table()
 
 
@@ -342,10 +342,10 @@ create_product_table()
 # running get_main_categories
 # saving to database
 # assigning as main_categories
-main_categories = get_main_categories(save_db = True)
+# main_categories = get_main_categories(save_db = True)
 
 # code to run and collect all categories
-get_all_categories(main_categories,save_db=True)
+# get_all_categories(main_categories,save_db=True)
 
 # create table of lowest level categories
 sub_cat_crawl_db = pd.read_sql_query(
@@ -359,7 +359,7 @@ sub_cat_crawl_list = sub_cat_crawl_db[['cat_id','url']]
 
 
 # for loop to run scraping functions (one page & categories)
-for cat_id, url in sub_cat_crawl_list.values[:2]:
+for cat_id, url in sub_cat_crawl_list.values:
   print(url, cat_id)
   get_one_category_scrape(url, cat_id)
 
