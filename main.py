@@ -16,14 +16,25 @@ Step 3 - for each cateogry in this table, pull the URL, and repeat the steps fro
 Step 4 - get_all_categories(main_categories,save_db = TRUE) is the final step to save
 '''
 
-# Functions and classes for entire program
+# Functions, classes, sections for entire program
 # function to get_url(url)
-# function to create category table 
+# function to create category table
+# function to create product table
 # creating class Category
+# creating class Product
 # function to get main categories
 # function to get sub categories
 # function to get all categories
-# section to clean tables and start over, if needed
+# function to get products from one page
+# function to scrape one entire category
+# section to drop current tables and start over, when needed
+# section to run functions
+    # get main categories
+    # get all categories
+# section to create table of lowest level categories
+# section to run product scraping functions
+# section to create categories and product csv files
+
 
 from bs4 import BeautifulSoup
 import requests
@@ -321,7 +332,7 @@ def get_one_category_scrape(url, cat_id):
     
     return finalData
 
-
+# section to clear tables and recreate tables
 # drop the whole table to clean things up
 # this actually drops all data from database to start over
 # this helps for testing
@@ -329,23 +340,23 @@ def get_one_category_scrape(url, cat_id):
 
 # clearing the database
 # cur.execute('DROP TABLE categories;')
-cur.execute('DROP TABLE product_table;')
-conn.commit()
+# cur.execute('DROP TABLE product_table;')
+# conn.commit()
 
 # creating tables
 # create_categories_table()
-create_product_table()
+# create_product_table()
 
 
-# RUNNING ALL FUNCTIONS
+# RUNNING FUNCTIONS
 
 # running get_main_categories
 # saving to database
 # assigning as main_categories
-# main_categories = get_main_categories(save_db = True)
+# unindent to run - main_categories = get_main_categories(save_db = True)
 
 # code to run and collect all categories
-# get_all_categories(main_categories,save_db=True)
+# unindent to run - get_all_categories(main_categories,save_db=True)
 
 # create table of lowest level categories
 sub_cat_crawl_db = pd.read_sql_query(
@@ -358,8 +369,10 @@ sub_cat_crawl_db = pd.read_sql_query(
 sub_cat_crawl_list = sub_cat_crawl_db[['cat_id','url']]
 
 
-# for loop to run scraping functions (one page & categories)
+# for loop to run product scraping functions (one page & categories)
 for cat_id, url in sub_cat_crawl_list.values:
   print(url, cat_id)
   get_one_category_scrape(url, cat_id)
 
+
+# section to create csv files
